@@ -1,0 +1,63 @@
+/*
+Create some test data to simulate the deadlocks
+Version : 0.0
+Date : 03/01/2013
+Create some test data to simulate the deadlocks
+adminuser 
+
+*/
+
+SET NOCOUNT ON
+
+--Test 1
+IF object_id('DeadlockTest1') is not null
+BEGIN
+  PRINT 'Table DeadlockTest1 Exists.'
+	DROP TABLE DeadlockTest1;
+END
+
+IF object_id('DeadlockTest1') is null
+BEGIN
+	PRINT 'Table DeadlockTest1 Created.' 
+	CREATE TABLE DeadlockTest1 (Deadlock_col1 int);
+END
+GO
+
+--Test 2
+IF object_id('DeadlockTest2') is not null
+BEGIN
+	PRINT 'Table DeadlockTest2 Exists.'
+	DROP TABLE DeadlockTest2;
+END
+
+IF object_id('DeadlockTest2') is null
+BEGIN
+	PRINT 'Table DeadlockTest2 Created.' 
+	CREATE TABLE DeadlockTest2 (Deadlock_col2 int);
+END
+GO
+
+/* Insert some data  */
+
+
+Insert into DeadlockTest1 values(1)
+Insert into DeadlockTest1 values(2)
+Insert into DeadlockTest1 values(3)
+Insert into DeadlockTest1 values(4);
+Insert into DeadlockTest1 values(5);
+Insert into DeadlockTest1 values(6);
+Insert into DeadlockTest1 values(7);
+
+Insert into DeadlockTest2 values(1);
+Insert into DeadlockTest2 values(2);
+Insert into DeadlockTest2 values(3);
+Insert into DeadlockTest2 values(4);
+Insert into DeadlockTest2 values(5);
+Insert into DeadlockTest2 values(6);
+Insert into DeadlockTest2 values(7);
+
+--select * from DeadlockTest1 ;
+--select * from DeadlockTest2 ;
+
+
+/* Fire an update to create  deadlock  */
