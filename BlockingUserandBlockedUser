@@ -1,21 +1,22 @@
 /*   Blocked User and Blocing User */
-/* This Query usus Admin as the datebase name - Change where ever aplicable.
+/* This Query uses our "Admin" as the datebase name - Change where ever aplicable.
  * Version : 0.0
- * Date : 03/01/2013
+ * Date : 03/01/2013 8:37PM EST
  * Author : 
- * This script displays the blocks in the Database as the application is being run.
+ * Lot of this was Hacked together from lot of individual pieces from the forums
+ * This script displays the blocks/deadlocks in the Database as the application is being run.
  * There are 2 parts to this script. 
  * 1. The first sql returns any blocks occuring on the Database displaying:
  *              Object locked, Blocked User, Blocking User, etc
  * 2. The second sql returns information about the resource causing the blocking.
  *      Information displayed includes user holding the lock, lock type and lock granularity 
  
- * More will be added later 
- 
+ * More will be added later ---- next hack
+ *  I tried to keep it as much TSQL as I could
  */
  
 --DECLARE @DatabaseName AS varchar(100) = 'Admin';
---  SELECT @DatabaseName;
+-- SELECT @DatabaseName;
 --GO
 
 SELECT object_name(rsc_objid) as 'Object Locked',
