@@ -1,0 +1,109 @@
+/*   Blocked User and Blocing User */
+/* This Query usus Admin as the datebase name - Change where ever aplicable.
+ * Version : 0.0
+ * Date : 03/01/2013
+ * Author : 
+ * This script displays the blocks in the Database as the application is being run.
+ * There are 2 parts to this script. 
+ * 1. The first sql returns any blocks occuring on the Database displaying:
+ *              Object locked, Blocked User, Blocking User, etc
+ * 2. The second sql returns information about the resource causing the blocking.
+ *      Information displayed includes user holding the lock, lock type and lock granularity 
+ 
+ * More will be added later 
+ 
+ */
+ 
+--DECLARE @DatabaseName AS varchar(100) = 'Admin';
+--  SELECT @DatabaseName;
+--GO
+
+SELECT object_name(rsc_objid) as 'Object Locked',
+    prc.loginame as 'Blocked User',
+    (select loginame from master..sysprocesses where spid = prc.blocked) as 'Blocking User',
+    (prc.waittime/1000) as 'Time Waiting in secs',
+    req_spid as 'Blocked Process ID',
+    prc.blocked 'Blocking Process ID',
+    rsc_bin as 'Locked Resource ID',
+    case cast(rsc_type as varchar(4)) 
+        when '1' then 'Null'
+        when '2' then 'Database'
+        when '3' then 'File'
+        when '4' then 'Index'
+        when '5' then 'Table'
+        when '6' then 'Page'
+        when '7' then 'Key'
+        when '8' then 'Extent'
+        when '9' then 'RId'
+        when '10' then 'Application' 
+    End as 'Lock Type waiting for',
+    case cast(req_mode as varchar(4))
+        when '0' then 'NULL'
+        when '1' then 'Sch-S (Schema stability)'
+        when '2' then 'Sch-M (Schema modification)'
+        when '3' then 'S (Shared)'
+        when '4' then 'U (Update)'
+        when '5' then 'X (Exclusive)'
+        when '6' then 'IS (Intent Shared)'
+        when '7' then 'IU (Intent Update)'
+        when '8' then 'IX (Intent Exclusive)'
+        when '9' then 'SIU (Shared Intent Update)'
+        when '10' then 'SIX (Shared Intent Exclusive)'
+        when '11' then 'UIX (Update Intent Exclusive)'
+    End as 'Lock Mode',
+    case cast (req_status as varchar(2))
+        when '1' then 'Granted'
+        when '2' then 'Converting'
+        when '3' then 'Waiting'
+    End as 'Lock Status'
+from master..syslockinfo lockinfo, master..sysprocesses prc
+where rsc_dbid = (select dbid from master..sysdatabases where name = 'Admin') 
+and req_status <> '1'
+and lockinfo.req_spid = prc.spid
+order by object_name(rsc_objid),rsc_type,req_mode
+go
+
+
+select object_name(rsc_objid) as 'Blocked Object',
+    req_spid as 'Blocking Id',
+    (select loginame from master..sysprocesses where spid = req_spid) as 'Blocking User',
+    rsc_bin as 'Resource ID',
+    case cast(rsc_type as varchar(4)) 
+        when '1' then 'Null'
+        when '2' then 'Database'
+        when '3' then 'File'
+        when '4' then 'Index'
+        when '5' then 'Table'
+        when '6' then 'Page'
+        when '7' then 'Key'
+        when '8' then 'Extent'
+        when '9' then 'RId'
+        when '10' then 'Application' 
+    End as 'Current Lock Level',
+    case cast(req_mode as varchar(4))
+        when '0' then 'NULL'
+        when '1' then 'Sch-S (Schema stability)'
+        when '2' then 'Sch-M (Schema modification)'
+        when '3' then 'S (Shared)'
+        when '4' then 'U (Update)'
+        when '5' then 'X (Exclusive)'
+        when '6' then 'IS (Intent Shared)'
+        when '7' then 'IU (Intent Update)'
+        when '8' then 'IX (Intent Exclusive)'
+        when '9' then 'SIU (Shared Intent Update)'
+        when '10' then 'SIX (Shared Intent Exclusive)'
+        when '11' then 'UIX (Update Intent Exclusive)'
+    End as 'Current Lock Type',
+    case cast (req_status as varchar(2))
+        when '1' then 'Granted'
+        when '2' then 'Converting'
+        when '3' then 'Waiting'
+    End as 'Current Lock Status'
+from master..syslockinfo lockinfo, master..sysprocesses prc
+where req_spid = prc.blocked
+and lockinfo.rsc_dbid = prc.dbid
+and req_status = '1'
+and rsc_bin in (select rsc_bin from master..syslockinfo where req_status = 3)
+and prc.dbid = (select dbid from master..sysdatabases where name = 'Admin')
+order by object_name(rsc_objid)
+
